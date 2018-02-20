@@ -11,7 +11,7 @@ records = tree.xpath('//m:record', namespaces=ns)
 def xpath_function(path):
     result = record.xpath(path, namespaces=ns)
     if len(result) == 0:
-        return 'na'
+        return None
     else:
         return result[0]
 
