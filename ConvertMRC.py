@@ -2,15 +2,15 @@ from pymarc import MARCReader
 
 def get_field(field_code):
     if record[field_code] is None:
-        print('None')
+        print(field_code, ':', 'None')
     else:
-        print(record[field_code]['a'])
+        print(field_code, ':', record[field_code]['a'])
 
 
 def get_fields(field_code):
     fields = record.get_fields(field_code)
     if fields == []:
-        print('None')
+        print(field_code, ':', 'None')
     else:
         l_list = []
         for data in fields:
@@ -19,26 +19,31 @@ def get_fields(field_code):
             for d in data_list[1:]:
                 d_list.append(d[1:])
             l_list.append((' -- ').join(d_list))
-        print(('|').join(l_list))
+        print(field_code, ':', ('|').join(l_list))
 
 
-
-
-
-
-
-
-fh = open('/Users/lijiawei/Desktop/uiu_ia-uiuc_20171002-unique-with856.mrc', 'rb')
+fh = open('/Users/lijiawei/Desktop/full_vufind3_export_for_UIU_20171016170000.mrc', 'rb')
 read = MARCReader(fh)
 i = 0
 for record in read:
-#     print(record.leader)
-    print(record.leader[6])
-    print(record.leader[7])
-    eighth_position = record['8']
+    # get leader position
+    leader_position = record.leader
+    if leader_position is not None:
+        print('LDR[6]:', record.leader[6])
+        print('LDR[7]:', record.leader[7])
+    else:
+        print('LDR[6]:', 'None')
+        print('LDR[7]:', 'None')
+
+    # get 008 position
+    eighth_position = str(record['008'])[6:]
     if eighth_position is not None:
-        print(eighth_position[7:11])
-        print(eighth_position[35:38])
+        print('008[7:10]:', eighth_position[7:11])
+        print('008[35:37]:', eighth_position[35:38])
+    else:
+        print('008[7:10]:', 'None')
+        print('008[35:37]:', 'None')
+
     get_field('20')
     get_field('35')
     get_field('50')
