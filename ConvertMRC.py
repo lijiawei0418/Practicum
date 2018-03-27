@@ -31,7 +31,8 @@ fh = open('uiu_ia-uiuc_20171002-unique-with856.mrc', 'rb')
 
 read = MARCReader(fh,force_utf8=True, to_unicode=True, hide_utf8_warnings=True, utf8_handling='ignore')
 
-header = ['ldr6', 'ldr7', 'year', 'language', '20', '35', '50', '82', '100', '110', '111', '245', '260', '264', '300', '505', '650', '651', '655', '700', '710', '856']
+# header = ['ldr6', 'ldr7', 'year', 'language', '20', '35', '50', '82', '100', '110', '111', '245', '260', '264', '300', '505', '650', '651', '655', '700', '710', '856']
+header = ['ldr6', 'ldr7', 'year', 'language', 'isbn', 'scn', 'cn', 'dcn', 'author', 'corporate', 'mn', 'title', 'publication', 'production', 'pd', 'notes', 'subjects', 'geo', 'genre', 'pername', 'corporname', 'uri']
 
 csvfile = open('data.csv', 'w')
 csvwriter = csv.writer(csvfile)
@@ -73,10 +74,10 @@ for record in read:
         # print('008[7:10]:', 'None')
         # print('008[35:37]:', 'None')
 
-    data.append(get_field('20'))
-    data.append(get_field('35'))
-    data.append(get_field('50'))
-    data.append(get_field('82'))
+    data.append(get_field('020'))
+    data.append(get_field('035'))
+    data.append(get_field('050'))
+    data.append(get_field('082'))
     data.append(get_fields('100'))
     data.append(get_fields('110'))
     data.append(get_fields('111'))
