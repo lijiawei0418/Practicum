@@ -1,5 +1,7 @@
 from lxml import etree
-infile = open('/Users/lijiawei/Desktop/uiu_uiuc-loc_20180124_uiuc_DigitalRareBookCollections_105.xml', 'rb')
+import csv
+
+infile = open('uiu_uiuc-loc_20180124_uiuc_DigitalRareBookCollections_105.xml', 'rb')
 xml = infile.read()
 infile.close()
 tree = etree.fromstring(xml)
@@ -8,166 +10,85 @@ ns = {'m': 'http://www.loc.gov/MARC21/slim'}
 records = tree.xpath('//m:record', namespaces=ns)
 
 
-def xpath_function(path):
-    result = record.xpath(path, namespaces=ns)
-    if len(result) == 0:
-        return None
+def get_field(field_code):
+    index_term = record.xpath('./m:datafield[@tag="{0}"]/m:subfield[@code = "a"]/text()'.format(field_code),namespaces=ns)
+    if len(index_term) != 0:
+        return index_term[0]
     else:
-        return result[0]
+        return None
+
+def get_fields(field_code):
+    index_term = record.xpath('./m:datafield[@tag="{0}"]'.format(field_code), namespaces=ns)
+    field_list = []
+    for item in index_term:
+        item_list = item.xpath('./m:subfield/text()', namespaces=ns)
+        item_string = ' -- '.join(item_list)
+        field_list.append(item_string)
+    field = '|'.join(field_list)
+    return field
+
+header = ['ldr6', 'ldr7', 'year', 'language', 'isbn', 'scn', 'cn', 'dcn', 'author', 'corporate', 'mn', 'title', 'publication', 'production', 'pd', 'notes', 'subjects', 'geo', 'genre', 'pername', 'corporname', 'uri']
 
 
-all_info = []
+csvfile = open('dataxml.csv', 'w')
+csvwriter = csv.writer(csvfile)
+csvwriter.writerow(header)
+
 for record in records:
-    book_info = []
-    # get leader position
-    leader = xpath_function('./m:leader/text()')
-    if leader != 'na':
+    data = []
+    leader = record.xpath('./m:leader/text()', namespaces=ns)
+    if leader is not None:
         # get type of record
-        type_of_record = leader[6]
+        data.append(leader[0][6])
         # get bibliography level
-        bib_level = leader[7]
+        data.append(leader[0][7])
     else:
         type_of_record = leader
         bib_level = leader
-    book_info.append(type_of_record)
-    book_info.append(bib_level)
+        data.append(type_of_record)
+        data.append(bib_level)
 
-    # get 008 position
-    control008 = xpath_function('./m:controlfield[@tag = "008"]/text()')
-    if control008 != 'na':
+    control008 = record.xpath('./m:controlfield[@tag = "008"]/text()', namespaces=ns)
+    if control008 is not None:
         # get language
-        language = control008[35:38]
+        data.append(control008[0][35:38])
         # get year
-        year = control008[7:11]
+        data.append(control008[0][7:11])
         # year有错，cleaning？
-
-        if control008[23] == 'o':
-            # get 856 position
-            # get electronic_link
-            electronic_link = xpath_function('./m:datafield[@tag = "856"]/m:subfield[@code = "u"]/text()')
-            book_info.append(electronic_link)
-        else:
-            electronic_link = 'na'
     else:
-        language = control008
-        year = control008
-        electronic_link = control008
-    book_info.append(year)
-    book_info.append(language)
-    book_info.append(electronic_link)
+        data.append(None)
+        data.append(None)
 
-    # get ISBN
-    isbn = xpath_function('./m:datafield[@tag = "020"]/m:subfield[@code = "a"]/text()')
-    book_info.append(isbn)
+    data.append(get_field('020'))
+    data.append(get_field('035'))
+    data.append(get_field('050'))
+    data.append(get_field('082'))
+    data.append(get_fields('100'))
+    data.append(get_fields('110'))
+    data.append(get_fields('111'))
+    data.append(get_field('245'))
+    data.append(get_fields('260'))
+    data.append(get_fields('264'))
+    data.append(get_fields('300'))
+    data.append(get_fields('505'))
+    data.append(get_fields('650'))
+    data.append(get_fields('651'))
+    data.append(get_fields('655'))
+    data.append(get_fields('700'))
+    data.append(get_fields('710'))
 
-    # get 035 position
-    # get system control number
-    system_control_nums = xpath_function('./m:datafield[@tag = "035"]/m:subfield[@code = "a"]/text()')
-    book_info.append(system_control_nums)
-    # 是否删掉OCOLC
+    electronic_link = record.xpath('./m:datafield[@tag = "856"]/m:subfield[@code = "u"]/text()', namespaces=ns)
+    if len(electronic_link) != 0:
+        electronic_link = electronic_link[0]
+    else:
+        electronic_link.append(None)
+    if control008[0][23] == 'o':
+        # get 856 position
+        # get electronic_link
+        data.append(electronic_link[0])
+    else:
+        data.append(None)
 
-    # get 082 position
-    # get dewey decimal
-    dewey_dec = xpath_function('./m:datafield[@tag = "082"]/m:subfield[@code = "a"]/text()')
-    book_info.append(dewey_dec)
+    csvwriter.writerow(data)
 
-    # get 100 position
-    # get personal name
-    personal_name = xpath_function('./m:datafield[@tag = "100"]/m:subfield[@code = "a"]/text()')
-    book_info.append(personal_name)
-
-    # get 110 position
-    # get Corporate name
-    corporate_name = xpath_function('./m:datafield[@tag = "110"]/m:subfield[@code = "a"]/text()')
-    book_info.append(corporate_name)
-
-    # get 111 position
-    # get meeting name
-    meeting_name = xpath_function('./m:datafield[@tag = "111"]/m:subfield[@code = "a"]/text()')
-    book_info.append(meeting_name)
-
-    # get 245 position
-    # get title
-    title = xpath_function('./m:datafield[@tag = "245"]/m:subfield[@code = "a"]/text()')
-    book_info.append(title)
-
-    # get 260 position
-    # get publication place
-    publication_place = xpath_function('./m:datafield[@tag = "260"]/m:subfield[@code = "a"]/text()')
-    book_info.append(publication_place)
-
-    # get 260 position
-    # get publisher name
-    publisher_name = xpath_function('./m:datafield[@tag = "260"]/m:subfield[@code = "b"]/text()')
-    book_info.append(publisher_name)
-
-    # get 260 position
-    # get publication date
-    publication_date = xpath_function('./m:datafield[@tag = "260"]/m:subfield[@code = "c"]/text()')
-    book_info.append(publication_date)
-
-    # get 264 position
-    # get production place
-    producation_place = xpath_function('./m:datafield[@tag = "264"]/m:subfield[@code = "a"]/text()')
-    book_info.append(producation_place)
-
-    # get 264 position
-    # get producer name
-    producer_name = xpath_function('./m:datafield[@tag = "264"]/m:subfield[@code = "b"]/text()')
-    book_info.append(producer_name)
-
-    # get 264 position
-    # get producation date
-    producation_date = xpath_function('./m:datafield[@tag = "264"]/m:subfield[@code = "c"]/text()')
-    book_info.append(producation_date)
-
-    # get 300 position
-    # get extent
-    extent = xpath_function('./m:datafield[@tag = "300"]/m:subfield[@code = "a"]/text()')
-    book_info.append(extent)
-
-    # get 300 position
-    # get physical_detail
-    physical_detail = xpath_function('./m:datafield[@tag = "300"]/m:subfield[@code = "b"]/text()')
-    book_info.append(physical_detail)
-
-    # get 300 position
-    # get dimensions
-    dimensions = xpath_function('./m:datafield[@tag = "300"]/m:subfield[@code = "c"]/text()')
-    book_info.append(dimensions)
-
-    # get 505 position
-    # get formatted contents note
-    contents_note = xpath_function('./m:datafield[@tag = "505"]/m:subfield[@code = "a"]/text()')
-    book_info.append(contents_note)
-
-    # get 650 position
-    # get subject_access
-    subject_access = xpath_function('./m:datafield[@tag = "650"]/m:subfield[@code = "a"]/text()')
-    book_info.append(physical_detail)
-
-    # get 651 position
-    # get geographic_name
-    geographic_name = xpath_function('./m:datafield[@tag = "651"]/m:subfield[@code = "a"]/text()')
-    book_info.append(geographic_name)
-
-    # get 655 position
-    # get index_term (need more details)
-    index_term = xpath_function('./m:datafield[@tag = "655"]/m:subfield[@code = "a"]/text()')
-    book_info.append(index_term)
-
-    # get 700 position
-    # get personal name
-    personal_name = xpath_function('./m:datafield[@tag = "700"]/m:subfield[@code = "a"]/text()')
-    book_info.append(personal_name)
-
-    # get 710 position
-    # get corporate name (corporate_name1)
-    corporate_name1 = xpath_function('./m:datafield[@tag = "710"]/m:subfield[@code = "a"]/text()')
-    book_info.append(corporate_name1)
-
-
-
-    all_info.append(book_info)
-
-print(all_info)
+csvfile.close()
