@@ -31,6 +31,7 @@ header = ['ldr6', 'ldr7', 'year', 'language', 'isbn', 'scn', 'cn', 'dcn', 'autho
 
 
 csvfile = open('dataxml.csv', 'w')
+print(csvfile)
 csvwriter = csv.writer(csvfile)
 csvwriter.writerow(header)
 
